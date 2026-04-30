@@ -91,21 +91,28 @@
       const sceneEl = document.getElementById('arScene');
       const video = document.getElementById('myvideo');
 
-      btn.addEventListener('click', () => {
-        overlay.style.display = 'none';
+      sceneEl.addEventListener('loaded', () => {
+        const target = document.querySelector('[mindar-image-target]');
 
-        // Start MindAR after user gesture (required by browsers)
-        sceneEl.systems['mindar-image'].start();
+        target.addEventListener('targetFound', () => {
+          video.play().catch(err => console.warn('Video play error:', err));
+        });
 
-        // Play/pause video based on whether poster is detected
-        sceneEl.addEventListener('loaded', () => {
-          const target = document.querySelector('[mindar-image-target]');
-          target.addEventListener('targetFound', () => {
-            video.play().catch(err => console.warn('Video play error:', err));
-          });
-          target.addEventListener('targetLost', () => {
-            video.pause();
-          });
+        target.addEventListener('targetLost', () => {
+          video.pause();
+        });
+      
+        btn.addEventListener('click', async () => {
+          overlay.style.display = 'none';
+
+          const arSystem = sceneEl.systems['mindar-image-system'];
+
+          if (!arSystem) {
+            console.error('MindAR system not found');
+            return;
+          }
+
+          await arSystem.start();
         });
       });
     </script>
