@@ -4,20 +4,74 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AR Poster</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+    <!-- IMPORTANT: A-Frame must load before MindAR -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
     <style>
-      body { margin: 0; overflow: hidden; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { overflow: hidden; background: #000; }
+
+      #overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.75);
+        color: #fff;
+        font-family: sans-serif;
+        text-align: center;
+        padding: 2rem;
+        z-index: 999;
+      }
+      #overlay h1 { font-size: 1.4rem; margin-bottom: 0.75rem; }
+      #overlay p  { font-size: 0.95rem; opacity: 0.8; margin-bottom: 1.5rem; }
+      #startBtn {
+        padding: 0.75rem 2rem;
+        background: #e63946;
+        color: #fff;
+        border: none;
+        border-radius: 2rem;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      #startBtn:hover { background: #c1121f; }
     </style>
   </head>
   <body>
+
+    <!-- Start screen shown before AR launches -->
+    <div id="overlay">
+      <h1>AR Poster Viewer</h1>
+      <p>Point your camera at the poster to see the video overlay. Make sure the poster is well lit.</p>
+      <button id="startBtn">Start AR</button>
+    </div>
+
     <a-scene
-      mindar-image="imageTargetSrc: targets.mind; autoStart: true;"
+      id="arScene"
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false;"
       color-space="sRGB"
       renderer="colorManagement: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
+      <a-assets>
+        <video
+          id="myvideo"
+          src="simulation%20AR%20video.mp4"
+          preload="auto"
+          loop="true"
+          muted
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+      </a-assets>
+
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
@@ -25,33 +79,36 @@
           src="#myvideo"
           width="1"
           height="0.552"
-          position="0 0 0"
+          position="0 0 0.001"
           rotation="0 0 0"
         ></a-video>
       </a-entity>
-
-      <a-assets>
-        <video
-          id="myvideo"
-          src="simulation AR video.mp4"
-          preload="auto"
-          loop="true"
-          muted
-          playsinline
-          webkit-playsinline
-        ></video>
-      </a-assets>
     </a-scene>
 
     <script>
-      // Auto-play video when poster is detected
-      const sceneEl = document.querySelector('a-scene');
-      sceneEl.addEventListener('loaded', () => {
-        const target = document.querySelector('[mindar-image-target]');
-        const video = document.querySelector('#myvideo');
-        target.addEventListener('targetFound', () => { video.play(); });
-        target.addEventListener('targetLost',  () => { video.pause(); });
+      const btn = document.getElementById('startBtn');
+      const overlay = document.getElementById('overlay');
+      const sceneEl = document.getElementById('arScene');
+      const video = document.getElementById('myvideo');
+
+      btn.addEventListener('click', () => {
+        overlay.style.display = 'none';
+
+        // Start MindAR after user gesture (required by browsers)
+        sceneEl.components['mindar-image'].startAR();
+
+        // Play/pause video based on whether poster is detected
+        sceneEl.addEventListener('loaded', () => {
+          const target = document.querySelector('[mindar-image-target]');
+          target.addEventListener('targetFound', () => {
+            video.play().catch(err => console.warn('Video play error:', err));
+          });
+          target.addEventListener('targetLost', () => {
+            video.pause();
+          });
+        });
       });
     </script>
+
   </body>
 </html>
