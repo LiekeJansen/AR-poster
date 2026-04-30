@@ -95,7 +95,7 @@
         overlay.style.display = 'none';
 
         // Start MindAR after user gesture (required by browsers)
-        sceneEl.components['mindar-image'].startAR();
+        sceneEl.systems['mindar-image'].start();
 
         // Play/pause video based on whether poster is detected
         sceneEl.addEventListener('loaded', () => {
