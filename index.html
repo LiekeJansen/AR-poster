@@ -5,52 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AR Poster</title>
 
-    <!-- IMPORTANT: A-Frame must load before MindAR -->
+    <!-- A-Frame -->
     <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+
+    <!-- MindAR -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { overflow: hidden; background: #000; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
+      body {
+        overflow: hidden;
+        background: #000;
+      }
+
+      /* Start overlay */
       #overlay {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+        inset: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         background: rgba(0,0,0,0.75);
-        color: #fff;
+        color: white;
         font-family: sans-serif;
         text-align: center;
         padding: 2rem;
-        z-index: 999;
+        z-index: 2000;
       }
-      #overlay h1 { font-size: 1.4rem; margin-bottom: 0.75rem; }
-      #overlay p  { font-size: 0.95rem; opacity: 0.8; margin-bottom: 1.5rem; }
+
+      #overlay h1 {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+      }
+
+      #overlay p {
+        font-size: 0.95rem;
+        opacity: 0.85;
+        margin-bottom: 1.5rem;
+        max-width: 500px;
+      }
+
       #startBtn {
         padding: 0.75rem 2rem;
         background: #e63946;
-        color: #fff;
+        color: white;
         border: none;
         border-radius: 2rem;
         font-size: 1rem;
         cursor: pointer;
       }
-      #startBtn:hover { background: #c1121f; }
+
+      #startBtn:hover {
+        background: #c1121f;
+      }
+
+      /* Large floating video overlay */
+      #screenVideo {
+        display: none;
+        position: fixed;
+        left: 50%;
+        bottom: 4%;
+        transform: translateX(-50%);
+        width: 85vw;
+        max-width: 520px;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 16px;
+        z-index: 1500;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+        background: black;
+      }
     </style>
   </head>
+
   <body>
 
-    <!-- Start screen shown before AR launches -->
+    <!-- Intro screen -->
     <div id="overlay">
       <h1>AR Poster Viewer</h1>
-      <p>Point your camera at the map for a brief explanation of the simulation model.</p>
+
+      <p>
+        Point your camera at the map for a brief explanation
+        of the simulation model.
+      </p>
+
       <button id="startBtn">Start AR</button>
     </div>
 
+    <!-- Large screen-fixed video -->
+    <video
+      id="screenVideo"
+      src="simulation%20AR%20video.mp4"
+      preload="auto"
+      loop
+      muted
+      playsinline
+      webkit-playsinline
+      crossorigin="anonymous"
+    ></video>
+
+    <!-- AR Scene -->
     <a-scene
       id="arScene"
       mindar-image="imageTargetSrc: targets.mind; autoStart: false;"
@@ -59,50 +119,49 @@
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
-      <a-assets>
-        <video
-          id="myvideo"
-          src="simulation%20AR%20video.mp4"
-          preload="auto"
-          loop="true"
-          muted
-          playsinline
-          webkit-playsinline
-          crossorigin="anonymous"
-        ></video>
-      </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera
+        position="0 0 0"
+        look-controls="enabled: false"
+      ></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-video
-          src="#myvideo"
-          width="3.0"
-          height="3.0"
-          position="0 0.2 0.05"
-          rotation="0 0 0"
-        ></a-video>
-      </a-entity>
+      <!-- Invisible tracking target -->
+      <a-entity mindar-image-target="targetIndex: 0"></a-entity>
+
     </a-scene>
 
     <script>
       const btn = document.getElementById('startBtn');
       const overlay = document.getElementById('overlay');
       const sceneEl = document.getElementById('arScene');
-      const video = document.getElementById('myvideo');
+      const screenVideo = document.getElementById('screenVideo');
 
       sceneEl.addEventListener('loaded', () => {
+
         const target = document.querySelector('[mindar-image-target]');
 
+        // Show video when marker detected
         target.addEventListener('targetFound', () => {
-          video.play().catch(err => console.warn('Video play error:', err));
+
+          screenVideo.style.display = 'block';
+
+          screenVideo.play().catch(err => {
+            console.warn('Video play error:', err);
+          });
+
         });
 
+        // Hide video when marker lost
         target.addEventListener('targetLost', () => {
-          video.pause();
+
+          screenVideo.pause();
+          screenVideo.style.display = 'none';
+
         });
-      
+
+        // Start AR
         btn.addEventListener('click', async () => {
+
           overlay.style.display = 'none';
 
           const arSystem = sceneEl.systems['mindar-image-system'];
@@ -113,7 +172,9 @@
           }
 
           await arSystem.start();
+
         });
+
       });
     </script>
 
