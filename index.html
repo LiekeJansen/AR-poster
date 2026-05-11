@@ -65,29 +65,30 @@
         background: #c1121f;
       }
 
-      /* Large floating video overlay */
+      /* Centered floating video */
       #screenVideo {
-        display: none !important;
-      
-        position: fixed !important;
-      
-        top: 50% !important;
-        left: 50% !important;
-      
-        transform: translate(-50%, -50%) !important;
-      
-        width: 85vw !important;
-        max-width: 520px !important;
-      
-        aspect-ratio: 1 / 1 !important;
-        object-fit: cover !important;
-      
-        border-radius: 16px !important;
-        z-index: 99999 !important;
-      
-        box-shadow: 0 10px 40px rgba(0,0,0,0.45) !important;
-        background: black !important;
+        display: none;
+
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        width: 85vw;
+        max-width: 520px;
+
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+
+        border-radius: 16px;
+        z-index: 99999;
+
+        box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+        background: black;
       }
+
+      #screenVideo.visible {
+        display: block;
       }
     </style>
   </head>
@@ -106,7 +107,7 @@
       <button id="startBtn">Start</button>
     </div>
 
-    <!-- Large screen-fixed video -->
+    <!-- Floating centered video -->
     <video
       id="screenVideo"
       src="simulation%20AR%20video.mp4"
@@ -148,11 +149,10 @@
 
         const target = document.querySelector('[mindar-image-target]');
 
-        // Show video when marker detected
+        // Marker detected
         target.addEventListener('targetFound', () => {
 
-          screenVideo.style.display = 'block';
-          screenVideo.style.position = 'fixed';
+          screenVideo.classList.add('visible');
 
           screenVideo.play().catch(err => {
             console.warn('Video play error:', err);
@@ -160,11 +160,11 @@
 
         });
 
-        // Hide video when marker lost
+        // Marker lost
         target.addEventListener('targetLost', () => {
 
           screenVideo.pause();
-          screenVideo.style.display = 'none';
+          screenVideo.classList.remove('visible');
 
         });
 
